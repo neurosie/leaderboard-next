@@ -1,14 +1,8 @@
-import { format } from "path";
+import { displayTime } from "@/time";
 import React, { useRef, useState } from "react";
 
-function formatTime(timeMs: number) {
-    const d = new Date(0);
-    d.setMilliseconds(timeMs);
-    return `${d.toISOString().substring(11, 19)}.${d.getMilliseconds().toString().padStart(3, '0')}`;
-}
-
-export default function Stopwatch() {
-    const [time, setTime] = useState(formatTime(0));
+export default function Stopwatch({ onNewRun }: { onNewRun: (time: number) => void }) {
+    const [time, setTime] = useState(0);
     const running = useRef(false);
     const startTimestamp = useRef<number | undefined>(undefined);
     const renderId = useRef<number | undefined>(undefined);
@@ -18,7 +12,7 @@ export default function Stopwatch() {
             startTimestamp.current = time;
         }
         const elapsed = time - startTimestamp.current!;
-        setTime(formatTime(elapsed));
+        setTime(elapsed);
         renderId.current = requestAnimationFrame((time) => step(time));
     }
 
@@ -35,12 +29,15 @@ export default function Stopwatch() {
             cancelAnimationFrame(renderId.current!);
             renderId.current = undefined;
             startTimestamp.current = undefined;
+            onNewRun(time);
         }
     }
 
     return (
-        <div>
+        <div className="flex flex-col gap-6">
+            <p className="w-full text-4xl text-center font-mono">{displayTime(time)}</p>
             <button
+                className="w-full h-16 bg-green-300 text-xl text-gray-900 font-bold font-mono select-none"
                 onPointerDown={start}
                 onKeyDown={start}
                 onPointerUp={stop}
@@ -49,7 +46,6 @@ export default function Stopwatch() {
             >
                 HOLD
             </button>
-            <code style={{ display: 'block' }}>{time}</code>
         </div>
     );
 }

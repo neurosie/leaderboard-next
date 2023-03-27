@@ -1,14 +1,22 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
-import { Knex } from 'knex'
-import { knex } from '@/config/knex'
 import Stopwatch from '@/components/Stopwatch'
+import Submit from '@/components/Submit'
+import { knex, Run } from '@/config/knex'
+import { Knex } from 'knex'
+import { Inter } from 'next/font/google'
+import Head from 'next/head'
+import { useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
-function Home({ data }: any) {
+function Home({ data }: { data: Run[] }) {
+  const [bestRun, setBestRun] = useState<number>(0);
+
+  function handleNewRun(time: number) {
+    if (time > bestRun) {
+      setBestRun(time);
+    }
+  }
+
   return (
     <>
       <Head>
@@ -17,21 +25,16 @@ function Home({ data }: any) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>
-        <Stopwatch />
+      <main className="p-6 flex flex-col gap-6">
+        <Stopwatch onNewRun={handleNewRun} />
 
-        <ul>
-          {data.map((entry: any) => <li key={entry.id}>{Object.entries(entry).toString()}</li>)}
-        </ul>
+        <Submit bestRun={bestRun} />
+
+        {/* <ul>
+          {data.map((entry) => <li key={entry.id}>{Object.entries(entry).toString()}</li>)}
+        </ul> */}
         {/* {Object.entries(data).toString()} */}
 
-        <form action="/api/hello" method="post">
-          <label htmlFor="name">Name:</label>
-          <input type="text" id="name" name="name" required />
-          <label htmlFor="score">Score:</label>
-          <input type="number" id="score" name="score" required />
-          <button type="submit">Submit</button>
-        </form>
       </main>
     </>
   )
@@ -48,7 +51,7 @@ export async function getServerSideProps() {
     });
   }
 
-  const data = await knex('runs').select();
+  const data = await knex('runs').select() as Run[];
   // console.log(data);
 
   return { props: { data } }

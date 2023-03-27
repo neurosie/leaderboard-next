@@ -1,12 +1,12 @@
 import { Knex } from 'knex';
 
 // declare module 'knex/types/tables' {
-//     interface Run {
-//         id: number;
-//         name: string;
-//         score: number;
-//         submitted_at: number;
-//     }
+export interface Run {
+    id: number;
+    name: string;
+    score: number;
+    submitted_at: number;
+}
 
 //     interface Tables {
 //         runs: Run;
