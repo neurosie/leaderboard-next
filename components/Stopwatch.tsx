@@ -1,74 +1,55 @@
 import { format } from "path";
-import React, { RefObject } from "react";
+import React, { useRef, useState } from "react";
 
-interface IProps {
+function formatTime(timeMs: number) {
+    const d = new Date(0);
+    d.setMilliseconds(timeMs);
+    return `${d.toISOString().substring(11, 19)}.${d.getMilliseconds().toString().padStart(3, '0')}`;
 }
 
-interface IState {
-    time: string;
-}
+export default function Stopwatch() {
+    const [time, setTime] = useState(formatTime(0));
+    const running = useRef(false);
+    const startTimestamp = useRef<number | undefined>(undefined);
+    const renderId = useRef<number | undefined>(undefined);
 
-export class Stopwatch extends React.Component<IProps, IState> {
-    private renderId?: number;
-    private startTimestamp?: DOMHighResTimeStamp;
-    private button: RefObject<HTMLButtonElement>;
-    private running = false;
-
-    constructor(props: IProps) {
-        super(props);
-
-        this.state = {
-            time: this.format(0),
-        };
-        this.button = React.createRef();
-    }
-
-    format = (timeMs: number) => {
-        const d = new Date(0);
-        d.setMilliseconds(timeMs);
-        return `${d.toISOString().substring(11, 19)}.${d.getMilliseconds().toString().padStart(3, '0')}`;
-    }
-
-    step = (time: DOMHighResTimeStamp) => {
-        if (this.startTimestamp === undefined) {
-            this.startTimestamp = time;
+    const step = (time: DOMHighResTimeStamp) => {
+        if (startTimestamp.current === undefined) {
+            startTimestamp.current = time;
         }
-        const elapsed = time - this.startTimestamp!;
-        this.setState({ time: this.format(elapsed) });
-        this.renderId = requestAnimationFrame((time) => this.step(time));
+        const elapsed = time - startTimestamp.current!;
+        setTime(formatTime(elapsed));
+        renderId.current = requestAnimationFrame((time) => step(time));
     }
 
-    start = () => {
-        if (!this.running) {
-            this.running = true;
-            this.renderId = requestAnimationFrame((time) => this.step(time));
+    function start() {
+        if (!running.current) {
+            running.current = true;
+            renderId.current = requestAnimationFrame((time) => step(time));
         }
     }
 
-    stop = () => {
-        if (this.running) {
-            this.running = false;
-            cancelAnimationFrame(this.renderId!);
-            this.renderId = undefined;
-            this.startTimestamp = undefined;
+    function stop() {
+        if (running.current) {
+            running.current = false;
+            cancelAnimationFrame(renderId.current!);
+            renderId.current = undefined;
+            startTimestamp.current = undefined;
         }
     }
 
-    render() {
-        return (
-            <div>
-                {/* <button onPointerDown={this.button}>Start/Stop</button> */}
-                <button
-                    onPointerDown={this.start}
-                    onKeyDown={this.start}
-                    onPointerUp={this.stop}
-                    onKeyUp={this.stop}
-                    onBlur={this.stop}
-                >
-                    HOLD
-                </button>
-                <code style={{ display: 'block' }}>{this.state.time}</code>
-            </div>
-        );
-    }
+    return (
+        <div>
+            <button
+                onPointerDown={start}
+                onKeyDown={start}
+                onPointerUp={stop}
+                onKeyUp={stop}
+                onBlur={stop}
+            >
+                HOLD
+            </button>
+            <code style={{ display: 'block' }}>{time}</code>
+        </div>
+    );
 }

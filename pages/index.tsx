@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
 import { Knex } from 'knex'
 import { knex } from '@/config/knex'
-import { Stopwatch } from '@/components/Stopwatch'
+import Stopwatch from '@/components/Stopwatch'
 
 const inter = Inter({ subsets: ['latin'] })
 
